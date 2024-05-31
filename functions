@@ -114,7 +114,7 @@ function log {
 # ==============
 
 _curl="curl --silent "
-_j_curl="$_curl --header 'accept: application/json' --header 'content-type: application/json' "
+_j_curl="$_curl --header accept:application/json --header content-type:application/json "
 
 # Authenticated cURL: Include API token header only if it is set and not --dry-run
 _a_curl=$_j_curl
