@@ -3,6 +3,10 @@ SCE API - shell wrappers around cURL
 
 This is a simple shell wrapper around cURL to call Salad Cloud API endpoints.
 
+`sce` does not include sanity-check prevention steps often found in
+a CLI; for example `project-clean` will happily delete everything in the
+currently configured project without asking.  Here be dragons!
+
 ## Commands
 
 * `cg-create <data-filename>`  
@@ -22,6 +26,12 @@ This is a simple shell wrapper around cURL to call Salad Cloud API endpoints.
 
 * `job-delete <queue-name> <job-id>`  
   Delete a job from a queue
+
+* `project-clean`  
+  Clean up all resources under a project: container groups, queues
+
+* `project-status`  
+  Show summary of project
 
 * `queue-create <data-filename>`  
   Create a new job queue

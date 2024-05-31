@@ -36,6 +36,12 @@ job-create <queue-name> <data-filename>
 job-delete <queue-name> <job-id>
   Delete a job from a queue
 
+project-clean
+  Clean up all resources under a project: container groups, queues
+
+project-status
+  Show summary of project
+
 queue-create <data-filename>
   Create a new job queue
 
@@ -74,6 +80,34 @@ END_HELP
 # Source our support functions
 INC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 source $INC_DIR/functions
+
+# Subcommand Functions
+
+# do_project_clean
+# Clean all container groups and queues from a project
+function do_project_clean {
+    local _cgroups=$(_sce_list_container_groups | jq -r '.items[] | "\(.name)"')
+    for cg in $_cgroups; do
+        _sce_delete_container_group $cg
+    done
+
+    local _queues=$(_sce_list_queues | jq -r '.items[] | "\(.name)"')
+    for q in $_queues; do
+        _sce_delete_queue $q
+    done
+}
+
+# do_project_status
+# List container groups and queues, summarize usage
+function do_project_status {
+    local _cg=$(_sce_list_container_groups)
+    local _cgroups=$(echo $_cg | jq -r '.items[] | "\(.name)"')
+    echo "Container Groups: $_cgroups"
+
+    local _queue=$(_sce_list_queues)
+    local _queues=$(echo $_queue | jq -r '.items[] | "\(.name)"')
+    echo "Queues: $_queues"
+}
 
 # Execution starts here
 
@@ -118,8 +152,8 @@ case $COMMAND in
         POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1} | jq -r "$json_fmt"
         ;;
     cg-delete)
-        # <org-name> <project-name> <cg-name>
-        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+        # <cg-name>
+        _sce_delete_container_group $1
         ;;
     cg-list)
         if [[ -n $JSON ]]; then
@@ -128,7 +162,7 @@ case $COMMAND in
             json_fmt='.items[] | "\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
         # <org-name> <project-name>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" | jq -r "$json_fmt"
+        _sce_list_container_groups | jq -r "$json_fmt"
         ;;
     cg-show)
         if [[ -n $JSON ]]; then
@@ -159,7 +193,8 @@ case $COMMAND in
         else
             json_fmt='.items[] | "\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" | jq -r "$json_fmt"
+        # <queue-name>
+        _sce_list_queue_jobs $1 | jq -r "$json_fmt"
         ;;
     job-show|j-show)
         if [[ -n $JSON ]]; then
@@ -169,6 +204,12 @@ case $COMMAND in
         fi
         # <org-name> <project-name> <queue-name> <job-id>
         GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
+        ;;
+    project-clean)
+        do_project_clean
+        ;;
+    project-status)
+        do_project_status
         ;;
     queue-create|q-create)
         [[ -r "$1" ]] || die "Data file '$1' not found"
@@ -181,8 +222,8 @@ case $COMMAND in
         POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1} | jq -r "$json_fmt"
         ;;
     queue-delete|q-delete)
-        # <org-name> <project-name> <queue-name>
-        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
+        # <queue-name>
+        _sce_delete_queue_job $1
         ;;
     queue-list|q-list)
         if [[ -n $JSON ]]; then
@@ -191,7 +232,7 @@ case $COMMAND in
             json_fmt='.items[] | "\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <org-name> <project-name>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" | jq -r "$json_fmt"
+        _sce_list_queues | jq -r "$json_fmt"
         ;;
     queue-show|q-show)
         if [[ -n $JSON ]]; then

@@ -173,69 +173,43 @@ function PUT {
 }
 
 
-# rt_delete <rt-path>
-# Delete Item: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-DeleteItem
-function rt_delete {
-    DELETE "$SCE_URL/${1}"
+# SCE API Primitives
+# ==================
+
+# Container Groups
+
+# _sce_delete_container_group <cg-name>
+function _sce_delete_container_group {
+    # <org-name> <project-name> <cg-name>
+    DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
 }
 
-# Check if artifact exists, returns HTTP code, 404 if not found
-function rt_exists {
-    local info=$(GET $SCE_URL/api/storage/$1)
-    local status=$(echo $info | jq '.errors[0].status')
-    return $status
+# _sce_list_container_groups
+function _sce_list_container_groups {
+    # <org-name> <project-name>
+    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers"
 }
 
-# rt_list <rt-path> [deep]
-# File List: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-FileList
-function rt_list {
-    local _deep
-    [[ -n $2 ]] && _deep="?list&deep=1&mdtimestamps=1"
-    GET "$SCE_URL/api/storage/${1}${_deep}"
+# Jobs
+
+# _sce_list_queue_jobs <queue-name>
+function _sce_list_queue_jobs {
+    # <org-name> <project-name> <queue-name>
+    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs"
 }
 
-# rt_list_repos [<repo-type>]
-# Get Repositories: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-GetRepositories
-function rt_list_repos {
-    local _rt_type
-    [[ -n $1 ]] && _rt_type="?type=${1}"
-    GET "$SCE_URL/api/repositories${_rt_type}"
+# Queues
+
+# _sce_delete_queue <queue-name>
+function _sce_delete_queue {
+    # <org-name> <project-name> <queue-name>
+    DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
 }
 
-# rt_mkdir <rt-path>
-# Create Directory: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-CreateDirectory
-function rt_mkdir {
-    # Ensure path ends in exactly one slash ('/')
-    PUT "$SCE_URL/${1%/}/"
-}
-
-# rt_move <rt-path> <rt-path>
-# Copy Item: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-MoveItem
-function rt_move {
-    local _dry
-    [[ -n $SCE_DRY_RUN ]] && _dry="&dry=1"
-    POST "$SCE_URL/api/move/${1}?to=/${2}${_dry}"
-}
-
-# rt_trace <path>
-# Trace Artifact Retrieval: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-TraceArtifactRetrieval
-function rt_trace {
-    GET "$SCE_URL/${1}?trace"
-}
-
-# rt_upload_archive <src-dir> <rt-path>
-# Upload a directory as an archive file to Artifactory
-# Deploy Artifact from Archive: https://www.jfrog.com/confluence/display/rtf/artifactory+rest+api#ArtifactoryRESTAPI-DeployArtifactsfromArchive
-function rt_upload_archive {
-    local _src=${1}
-    local _rt_path=${2}
-    local _url=$SCE_URL/${_rt_path}
-    local _dry_run
-
-    [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
-
-    $_dry_run $_a_curl -X PUT -i -H "X-Explode-Archive:true" -H "X-Explode-Archive-Atomic:true" -T ${_src} ${_url}
-    local _x=$?; [[ $_x == 0 ]] || die $LINENO "cURL exit $_x"
+# _sce_list_queues
+function _sce_list_queues {
+    # <org-name> <project-name>
+    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
 }
 
 
