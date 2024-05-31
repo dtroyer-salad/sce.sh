@@ -5,14 +5,29 @@ This is a simple shell wrapper around cURL to call Salad Cloud API endpoints.
 
 ## Commands
 
+* `cg-create <data-filename>`  
+  Create a new container group
+
+* `cg-delete <cg-name>`  
+  Delete a container group
+
 * `cg-list`  
   List container groups for an org/project
 
 * `cg-show <cg-name>`  
   Show specific container group details
 
-* `job-submit`  
-  Submit a job to a queue
+* `job-create <queue-name> <data-filename>`  
+  Create a new job in a queue
+
+* `job-delete <queue-name> <job-id>`  
+  Delete a job from a queue
+
+* `queue-create <data-filename>`  
+  Create a new job queue
+
+* `queue-delete <queue-name>`  
+  Delete a job queue
 
 * `queue-list`  
   List queues for an org/project

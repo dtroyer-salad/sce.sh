@@ -18,14 +18,29 @@ Usage:
   $script_name <command> [options] [args]
 
 Commands:
+cg-create <data-filename>
+  Create a new container group
+
+cg-delete <cg-name>
+  Delete a container group
+
 cg-list
   List container groups for an org/project
 
 cg-show <cg-name>
   Show specific container group details
 
-job-submit
-  Submit a job to a queue
+job-create <queue-name> <data-filename>
+  Create a new job in a queue
+
+job-delete <queue-name> <job-id>
+  Delete a job from a queue
+
+queue-create <data-filename>
+  Create a new job queue
+
+queue-delete <queue-name>
+  Delete a job queue
 
 queue-list
   List queues for an org/project
@@ -92,6 +107,20 @@ done
 shift $((OPTIND-1))
 
 case $COMMAND in
+    cg-create)
+        [[ -r "$1" ]] || die "Data file '$1' not found"
+        if [[ -n $JSON ]]; then
+            json_fmt='.'
+        else
+            json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
+        fi
+        # <org-name> <project-name> <data-filename>
+        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1} | jq -r "$json_fmt"
+        ;;
+    cg-delete)
+        # <org-name> <project-name> <cg-name>
+        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+        ;;
     cg-list)
         if [[ -n $JSON ]]; then
             json_fmt='.items[]'
@@ -105,10 +134,24 @@ case $COMMAND in
         if [[ -n $JSON ]]; then
             json_fmt='.'
         else
-            json_fmt='"\(.name) \(.current_state.status) \(.current_state.description)"'
+            json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
         # <org-name> <project-name> <cg-name>
         GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" | jq -r "$json_fmt"
+        ;;
+    job-create|j-create)
+        [[ -r "$2" ]] || die "Data file '$2' not found"
+        if [[ -n $JSON ]]; then
+            json_fmt='.'
+        else
+            json_fmt='"\(.id) \(.metadata.id) \(.status)"'
+        fi
+        # <org-name> <project-name> <queue-name> <job-filename>
+        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data @${2} | jq -r "$json_fmt"
+        ;;
+    job-delete|j-delete)
+        # <org-name> <project-name> <queue-name> <job-id>
+        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
         ;;
     job-list|j-list)
         if [[ -n $JSON ]]; then
@@ -122,14 +165,24 @@ case $COMMAND in
         if [[ -n $JSON ]]; then
             json_fmt='.'
         else
-            json_fmt='"\(.id) \(.metadata.id) \(.status)"'
+            json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <org-name> <project-name> <queue-name> <job-id>
         GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
         ;;
-    job-submit|j-submit)
-        # <org-name> <project-name> <queue-name> <job-filename>
-        cat $4 | POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data -
+    queue-create|q-create)
+        [[ -r "$1" ]] || die "Data file '$1' not found"
+        if [[ -n $JSON ]]; then
+            json_fmt='.'
+        else
+            json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
+        fi
+        # <org-name> <project-name> <data-filename>
+        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1} | jq -r "$json_fmt"
+        ;;
+    queue-delete|q-delete)
+        # <org-name> <project-name> <queue-name>
+        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
         ;;
     queue-list|q-list)
         if [[ -n $JSON ]]; then
