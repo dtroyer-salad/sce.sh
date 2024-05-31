@@ -149,7 +149,7 @@ case $COMMAND in
             json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
         # <org-name> <project-name> <data-filename>
-        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1} | jq -r "$json_fmt"
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1} | jq -r "$json_fmt"
         ;;
     cg-delete)
         # <cg-name>
@@ -171,7 +171,7 @@ case $COMMAND in
             json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
         # <org-name> <project-name> <cg-name>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" | jq -r "$json_fmt"
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" | jq -r "$json_fmt"
         ;;
     job-create|j-create)
         [[ -r "$2" ]] || die "Data file '$2' not found"
@@ -181,11 +181,11 @@ case $COMMAND in
             json_fmt='"\(.id) \(.metadata.id) \(.status)"'
         fi
         # <org-name> <project-name> <queue-name> <job-filename>
-        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data @${2} | jq -r "$json_fmt"
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data @${2} | jq -r "$json_fmt"
         ;;
     job-delete|j-delete)
         # <org-name> <project-name> <queue-name> <job-id>
-        DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
+        DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
         ;;
     job-list|j-list)
         if [[ -n $JSON ]]; then
@@ -200,10 +200,10 @@ case $COMMAND in
         if [[ -n $JSON ]]; then
             json_fmt='.'
         else
-            json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
+            json_fmt='"\(.id) \(.metadata) \(.status)"'
         fi
         # <org-name> <project-name> <queue-name> <job-id>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
         ;;
     project-clean)
         do_project_clean
@@ -219,7 +219,7 @@ case $COMMAND in
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <org-name> <project-name> <data-filename>
-        POST "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1} | jq -r "$json_fmt"
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1} | jq -r "$json_fmt"
         ;;
     queue-delete|q-delete)
         # <queue-name>
@@ -241,7 +241,7 @@ case $COMMAND in
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <org-name> <project-name> <queue-name>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}" | jq -r "$json_fmt"
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}" | jq -r "$json_fmt"
         ;;
     server-list|s-list)
         if [[ -n $JSON ]]; then
@@ -250,7 +250,7 @@ case $COMMAND in
             json_fmt='.instances[] | "\(.machine_id) \(.state) \(.update_time)"'
         fi
         # <org-name> <project-name> <cg-name>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances" | jq -r "$json_fmt"
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances" | jq -r "$json_fmt"
         ;;
     server-show|s-show)
         if [[ -n $JSON ]]; then
@@ -259,7 +259,7 @@ case $COMMAND in
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <org-name> <project-name> <cg-name> <server-id>
-        GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/instances/${2}" | jq -r "$json_fmt"
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/instances/${2}" | jq -r "$json_fmt"
         ;;
     *)
         echo "Unknown command: $COMMAND"

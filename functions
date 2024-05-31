@@ -15,8 +15,9 @@ FUNC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 # SCE_DRY_RUN - do not execute RT API commands
 # SCE_VERBOSE - emit RT API commands
 
-# Set the SCE Public API endpoint if it not already set
-SCE_URL=${SCE_URL:-https://api.salad.com/api/public}
+# Set the SCE Portal and Public API endpoints if it not already set
+SCE_PORTAL_URL=${SCE_PORTAL_URL:-https://portal-api.salad.com/api/portal}
+SCE_PUBLIC_URL=${SCE_PUBLIC_URL:-https://api.salad.com/api/public}
 
 # Set the API token if it is readable and is not already set
 [[ -r $HOME/.sce-apikey ]] && SCE_APIKEY=${SCE_APIKEY:-$(head -1 $HOME/.sce-apikey)}
@@ -181,13 +182,13 @@ function PUT {
 # _sce_delete_container_group <cg-name>
 function _sce_delete_container_group {
     # <org-name> <project-name> <cg-name>
-    DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+    DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
 }
 
 # _sce_list_container_groups
 function _sce_list_container_groups {
     # <org-name> <project-name>
-    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers"
+    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers"
 }
 
 # Jobs
@@ -195,7 +196,7 @@ function _sce_list_container_groups {
 # _sce_list_queue_jobs <queue-name>
 function _sce_list_queue_jobs {
     # <org-name> <project-name> <queue-name>
-    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs"
+    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs"
 }
 
 # Queues
@@ -203,13 +204,13 @@ function _sce_list_queue_jobs {
 # _sce_delete_queue <queue-name>
 function _sce_delete_queue {
     # <org-name> <project-name> <queue-name>
-    DELETE "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
+    DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
 }
 
 # _sce_list_queues
 function _sce_list_queues {
     # <org-name> <project-name>
-    GET "$SCE_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
+    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
 }
 
 
