@@ -34,7 +34,7 @@ set +o xtrace
 # _log level message
 _log() {
     local level=$1; shift
-    local msg="$(date --rfc-3339 seconds | tr ' ' 'T') $level ${BASH_SOURCE[2]}: $@"
+    local msg="$((date --rfc-3339 seconds || date) 2>/dev/null | tr ' ' 'T') $level ${BASH_SOURCE[2]}: $@"
 
     if [[ -z $SCE_LOG_FILE ]]; then
         if [[ "$level" == "ERROR" ]]; then
