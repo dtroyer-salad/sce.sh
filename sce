@@ -36,6 +36,9 @@ job-create <queue-name> <data-filename>
 job-delete <queue-name> <job-id>
   Delete a job from a queue
 
+login <email>
+  Log in to the SCE Portal
+
 project-clean
   Clean up all resources under a project: container groups, queues
 
@@ -59,6 +62,9 @@ server-list <cg-name>
 
 server-show <cg-name> <server-id>
   Show specific server details
+
+token-create <cg-name> <server-id>
+  Generate a log auth token for a specific server
 
 Options:
 -j
@@ -205,6 +211,13 @@ case $COMMAND in
         # <org-name> <project-name> <queue-name> <job-id>
         GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
         ;;
+    login)
+        # <email>
+        [[ -z $1 ]] && die "email address required"
+        read_password _sce_password "Enter Portal login password"
+        echo $(_sce_login $1 $_sce_password)
+        unset _sce_password
+        ;;
     project-clean)
         do_project_clean
         ;;
@@ -260,6 +273,10 @@ case $COMMAND in
         fi
         # <org-name> <project-name> <cg-name> <server-id>
         GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/instances/${2}" | jq -r "$json_fmt"
+        ;;
+    token-create)
+        # <cg-name> <server-id>
+        _sce_generate_log_auth_token $1 $2 | cat
         ;;
     *)
         echo "Unknown command: $COMMAND"

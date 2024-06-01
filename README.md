@@ -27,6 +27,9 @@ currently configured project without asking.  Here be dragons!
 * `job-delete <queue-name> <job-id>`  
   Delete a job from a queue
 
+* `login <email>`  
+  Log in to the SCE Portal
+
 * `project-clean`  
   Clean up all resources under a project: container groups, queues
 
@@ -50,6 +53,9 @@ currently configured project without asking.  Here be dragons!
 
 * `server-show <cg-name> <server-id>`  
   Show specific server details
+
+* `token-create <cg-name> <server-id>`  
+  Generate a log auth token for a specific server
 
 ## Options
 
