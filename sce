@@ -18,6 +18,9 @@ Usage:
   $script_name <command> [options] [args]
 
 Commands:
+apikey-show
+  Show the logged-in user's apikey
+
 cg-create <data-filename>
   Create a new container group
 
@@ -149,6 +152,20 @@ done
 shift $((OPTIND-1))
 
 case $COMMAND in
+    apikey-show)
+        if [[ -n $JSON ]]; then
+            json_fmt='.'
+        else
+            json_fmt='"\(.key)"'
+        fi
+        # (no args)
+        _sce_get_apikey
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
+        ;;
     cg-create)
         [[ -r "$1" ]] || die "Data file '$1' not found"
         if [[ -n $JSON ]]; then
@@ -327,7 +344,7 @@ case $COMMAND in
         if [[ -n $JSON ]]; then
             json_fmt='.'
         else
-            json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
+            json_fmt='"\(.instance_id) \(.state) \(.started) \(.ready)"'
         fi
         # <cg-name> <server-id>
         GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}"

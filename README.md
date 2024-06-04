@@ -9,6 +9,9 @@ currently configured project without asking.  Here be dragons!
 
 ## Commands
 
+* `apikey-show`  
+  Show the logged-in user's apikey
+
 * `cg-create <data-filename>`  
   Create a new container group
 

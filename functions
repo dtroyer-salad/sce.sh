@@ -218,6 +218,16 @@ function _sce_generate_log_auth_token {
     POST "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/generate-log-stream-auth-token" --cookie $SCE_COOKIE_JAR
 }
 
+# _sce_get_apikey
+function _sce_get_apikey {
+    GET "$SCE_PORTAL_URL/users/apikey" --cookie $SCE_COOKIE_JAR
+}
+
+# sce_get_apikey
+function sce_get_apikey {
+    _sce_get_apikey | jq -r '"\(.key)"'
+}
+
 # _sce_login <email> <password>
 function _sce_login {
     # body: email, password
