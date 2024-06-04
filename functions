@@ -26,6 +26,11 @@ SCE_PUBLIC_URL=${SCE_PUBLIC_URL:-https://api.salad.com/api/public}
 [[ -d $HOME/.config/sce ]] || mkdir -p $HOME/.config/sce
 SCE_COOKIE_JAR=${SCE_COOKIE_JAR:-$HOME/.config/sce/cookie-jar}
 
+# Initialize the global cURL return variables
+curl_STATUS=""
+curl_STDEXIT=""
+curl_STDOUT=""
+
 # Save trace setting
 _XTRACE_FUNCTIONS=$(set +o | grep xtrace)
 set +o xtrace
@@ -118,12 +123,40 @@ function log {
 # REST Functions
 # ==============
 
-_curl="curl --silent "
-_j_curl="$_curl --header accept:application/json --header content-type:application/json "
+# JSON output
+_j_curl="_curl --header accept:application/json --header content-type:application/json "
 
 # Authenticated cURL: Include API token header only if it is set and not --dry-run
 _a_curl=$_j_curl
 [[ -z $SCE_DRY_RUN ]] && _a_curl="$_j_curl ${SCE_APIKEY:+-H Salad-Api-Key:$SCE_APIKEY} "
+
+# _curl <args>
+# Runs cURL and sets the stdout, stderr and exit codes in global variables so the caller
+# has all available
+function _curl {
+    local xtrace
+    xtrace=$(set +o | grep xtrace)
+    set +o xtrace
+
+    local _response
+    local _x
+
+    # Run cURL and return a single string containing "<stderr>\0<stdout>\0<exit-code>\0"
+    # stderr contains the HTTP status code.
+    # Set stderr, stdout and exit code in 3 global variables for the caller to
+    # have available as needed
+    local _curl_cmd="curl --silent -o - "
+    {
+        IFS=$'\n' read -r -d '' curl_STATUS;
+        IFS=$'\n' read -r -d '' curl_STDOUT;
+        IFS=$'\n' read -r -d '' curl_STDEXIT;
+    } < <((printf '\0%s\0%d\0;' "$($_curl_cmd -w "%{stderr}%{response_code}" "$@")" "${?}" 1>&2) 2>&1)
+    curl_STDEXIT=${curl_STDEXIT:-0};
+    [[ -n $SCE_VERBOSE ]] && echo "$_curl_cmd $@" >&2
+    [[ $curl_STDEXIT == 0 ]] || die $LINENO "cURL exit $curl_STDEXIT"
+
+    $xtrace
+}
 
 # DELETE <url>
 function DELETE {
@@ -132,10 +165,9 @@ function DELETE {
     shift
 
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
-    [[ -n $SCE_VERBOSE ]] && echo "$_curl -X DELETE $_url" >&2
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X DELETE $_url $@" >&2
 
-    $_dry_run $_a_curl -X DELETE $_url
-    local _x=$?; [[ $_x == 0 ]] || die $LINENO "cURL exit $_x"
+    $_dry_run $_a_curl -X DELETE $_url $@
 }
 
 # GET <url>
@@ -145,10 +177,9 @@ function GET {
     shift
 
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
-    [[ -n $SCE_VERBOSE ]] && echo "$_curl -X GET $_url" >&2
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X GET $_url $@" >&2
 
-    $_dry_run $_a_curl -X GET $_url
-    local _x=$?; [[ $_x == 0 ]] || die $LINENO "cURL exit $_x"
+    $_dry_run $_a_curl -X GET $_url $@ >/dev/null
 }
 
 # POST <url> [...]
@@ -158,10 +189,9 @@ function POST {
     shift
 
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
-    [[ -n $SCE_VERBOSE ]] && echo "$_curl -X POST $_url $@" >&2
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X POST $_url $@" >&2
 
     $_dry_run $_a_curl -X POST $_url $@
-    local _x=$?; [[ $_x == 0 ]] || die $LINENO "cURL exit $_x"
 }
 
 # PUT <url>
@@ -171,10 +201,9 @@ function PUT {
     shift
 
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
-    [[ -n $SCE_VERBOSE ]] && echo "$_curl -X PUT $_url" >&2
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X PUT $_url $@" >&2
 
-    $_dry_run $_a_curl -X PUT $_url
-    local _x=$?; [[ $_x == 0 ]] || die $LINENO "cURL exit $_x"
+    $_dry_run $_a_curl -X PUT $_url $@
 }
 
 
@@ -186,7 +215,7 @@ function PUT {
 # Generate_instance_log_stream_auth_token
 # _sce_generate_log_auth_token <cg-name> <instance-id>
 function _sce_generate_log_auth_token {
-    POST "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/generate-log-stream-auth-token" --cookie $SCE_COOKIE_JAR -i
+    POST "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/generate-log-stream-auth-token" --cookie $SCE_COOKIE_JAR
 }
 
 # _sce_login <email> <password>
@@ -200,13 +229,13 @@ function _sce_login {
 
 # _sce_delete_container_group <cg-name>
 function _sce_delete_container_group {
-    # <org-name> <project-name> <cg-name>
+    # <cg-name>
     DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
 }
 
 # _sce_list_container_groups
 function _sce_list_container_groups {
-    # <org-name> <project-name>
+    # (no args)
     GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers"
 }
 
@@ -214,7 +243,7 @@ function _sce_list_container_groups {
 
 # _sce_list_queue_jobs <queue-name>
 function _sce_list_queue_jobs {
-    # <org-name> <project-name> <queue-name>
+    # <queue-name>
     GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs"
 }
 
@@ -222,13 +251,13 @@ function _sce_list_queue_jobs {
 
 # _sce_delete_queue <queue-name>
 function _sce_delete_queue {
-    # <org-name> <project-name> <queue-name>
+    # <queue-name>
     DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
 }
 
 # _sce_list_queues
 function _sce_list_queues {
-    # <org-name> <project-name>
+    # (no args)
     GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
 }
 

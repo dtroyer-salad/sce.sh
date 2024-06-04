@@ -92,12 +92,14 @@ source $INC_DIR/functions
 # do_project_clean
 # Clean all container groups and queues from a project
 function do_project_clean {
-    local _cgroups=$(_sce_list_container_groups | jq -r '.items[] | "\(.name)"')
+    _sce_list_container_groups
+    local _cgroups=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
     for cg in $_cgroups; do
         _sce_delete_container_group $cg
     done
 
-    local _queues=$(_sce_list_queues | jq -r '.items[] | "\(.name)"')
+    _sce_list_queues
+    local _queues=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
     for q in $_queues; do
         _sce_delete_queue $q
     done
@@ -106,13 +108,13 @@ function do_project_clean {
 # do_project_status
 # List container groups and queues, summarize usage
 function do_project_status {
-    local _cg=$(_sce_list_container_groups)
-    local _cgroups=$(echo $_cg | jq -r '.items[] | "\(.name)"')
-    echo "Container Groups: $_cgroups"
+    _sce_list_container_groups
+    local _cgroups=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
+    echo -e "Container Groups:\n$_cgroups"
 
-    local _queue=$(_sce_list_queues)
-    local _queues=$(echo $_queue | jq -r '.items[] | "\(.name)"')
-    echo "Queues: $_queues"
+    _sce_list_queues
+    local _queues=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
+    echo -e "\nQueues:\n$_queues"
 }
 
 # Execution starts here
@@ -154,8 +156,13 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
-        # <org-name> <project-name> <data-filename>
-        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1} | jq -r "$json_fmt"
+        # <data-filename>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers" --data @${1}
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     cg-delete)
         # <cg-name>
@@ -167,8 +174,13 @@ case $COMMAND in
         else
             json_fmt='.items[] | "\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
-        # <org-name> <project-name>
-        _sce_list_container_groups | jq -r "$json_fmt"
+        # (no args)
+        _sce_list_container_groups
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     cg-show)
         if [[ -n $JSON ]]; then
@@ -176,8 +188,13 @@ case $COMMAND in
         else
             json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         fi
-        # <org-name> <project-name> <cg-name>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" | jq -r "$json_fmt"
+        # <cg-name>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     job-create|j-create)
         [[ -r "$2" ]] || die "Data file '$2' not found"
@@ -186,12 +203,20 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.metadata.id) \(.status)"'
         fi
-        # <org-name> <project-name> <queue-name> <job-filename>
-        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data @${2} | jq -r "$json_fmt"
+        # <queue-name> <job-filename>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs" --data @${2}
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     job-delete|j-delete)
-        # <org-name> <project-name> <queue-name> <job-id>
+        # <queue-name> <job-id>
         DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
+        if [[ ! ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq
+        fi
         ;;
     job-list|j-list)
         if [[ -n $JSON ]]; then
@@ -200,7 +225,12 @@ case $COMMAND in
             json_fmt='.items[] | "\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <queue-name>
-        _sce_list_queue_jobs $1 | jq -r "$json_fmt"
+        _sce_list_queue_jobs $1
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     job-show|j-show)
         if [[ -n $JSON ]]; then
@@ -208,8 +238,13 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.metadata) \(.status)"'
         fi
-        # <org-name> <project-name> <queue-name> <job-id>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}" | jq -r "$json_fmt"
+        # <queue-name> <job-id>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     login)
         # <email>
@@ -231,12 +266,20 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
-        # <org-name> <project-name> <data-filename>
-        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1} | jq -r "$json_fmt"
+        # <data-filename>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --data @${1}
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     queue-delete|q-delete)
         # <queue-name>
-        _sce_delete_queue_job $1
+        _sce_delete_queue $1
+        if [[ ! ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq
+        fi
         ;;
     queue-list|q-list)
         if [[ -n $JSON ]]; then
@@ -244,8 +287,13 @@ case $COMMAND in
         else
             json_fmt='.items[] | "\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
-        # <org-name> <project-name>
-        _sce_list_queues | jq -r "$json_fmt"
+        # (no args)
+        _sce_list_queues
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     queue-show|q-show)
         if [[ -n $JSON ]]; then
@@ -253,8 +301,13 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
-        # <org-name> <project-name> <queue-name>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}" | jq -r "$json_fmt"
+        # <queue-name>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}"
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     server-list|s-list)
         if [[ -n $JSON ]]; then
@@ -262,8 +315,13 @@ case $COMMAND in
         else
             json_fmt='.instances[] | "\(.machine_id) \(.state) \(.update_time)"'
         fi
-        # <org-name> <project-name> <cg-name>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances" | jq -r "$json_fmt"
+        # <cg-name>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances"
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     server-show|s-show)
         if [[ -n $JSON ]]; then
@@ -271,12 +329,24 @@ case $COMMAND in
         else
             json_fmt='"\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
-        # <org-name> <project-name> <cg-name> <server-id>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/instances/${2}" | jq -r "$json_fmt"
+        # <cg-name> <server-id>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}"
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
         ;;
     token-create)
+        json_fmt="."
         # <cg-name> <server-id>
-        _sce_generate_log_auth_token $1 $2 | cat
+        _sce_generate_log_auth_token $1 $2
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo "Status: $curl_STATUS"
+            echo $curl_STDOUT | jq "."
+        fi
         ;;
     *)
         echo "Unknown command: $COMMAND"
