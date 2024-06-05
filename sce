@@ -30,6 +30,9 @@ cg-delete <cg-name>
 cg-list
   List container groups for an org/project
 
+cg-log-list
+  List last 24 hours of logs for the container group
+
 cg-show <cg-name>
   Show specific container group details
 
@@ -193,6 +196,22 @@ case $COMMAND in
         fi
         # (no args)
         _sce_list_container_groups
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
+        ;;
+    cg-log-list)
+        if [[ -n $JSON ]]; then
+            json_fmt='.items[]'
+        else
+            json_fmt='.items[] | "\(.create_time) \(.machine_id) \(.message)"'
+        fi
+        # <cg-name>
+        _start_time=$(date -u -v-1d "+%Y-%m-%dT%H:%M:%SZ")
+        _data="{\"start_time\":\"$_start_time\"}"
+        POST "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/logs" --data "$_data"  --cookie $SCE_COOKIE_JAR
         if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
             echo $curl_STDOUT | jq -r "$json_fmt"
         else

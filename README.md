@@ -21,6 +21,9 @@ currently configured project without asking.  Here be dragons!
 * `cg-list`  
   List container groups for an org/project
 
+* `cg-log-list`  
+  List last 24 hours of logs for the container group
+
 * `cg-show <cg-name>`  
   Show specific container group details
 
