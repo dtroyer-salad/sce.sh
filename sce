@@ -218,6 +218,20 @@ case $COMMAND in
             echo $curl_STDOUT | jq
         fi
         ;;
+    cg-set)
+        if [[ -n $JSON ]]; then
+            json_fmt='.'
+        else
+            json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
+        fi
+        # <cg-name> <data-filename>
+        PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            echo $curl_STDOUT | jq -r "$json_fmt"
+        else
+            echo $curl_STDOUT | jq
+        fi
+        ;;
     cg-show)
         if [[ -n $JSON ]]; then
             json_fmt='.'
