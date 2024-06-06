@@ -280,7 +280,16 @@ function _sce_delete_queue {
 # _sce_list_queues
 function _sce_list_queues {
     # (no args)
-    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
+    GET "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --cookie $SCE_COOKIE_JAR
+    # GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
+}
+
+# Servers
+
+# _sce_list_servers  (list_container_group_instances)
+function _sce_list_servers {
+    # <cg-name>
+    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances"
 }
 
 

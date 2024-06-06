@@ -114,13 +114,28 @@ function do_project_clean {
 # do_project_status
 # List container groups and queues, summarize usage
 function do_project_status {
+    # Get container groups first since we need them to fill out the queue list
     _sce_list_container_groups
-    local _cgroups=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
-    echo -e "Container Groups:\n$_cgroups"
+    local _cgroups_raw=$curl_STDOUT
+    local _cgroups=$(echo $_cgroups_raw | jq -r '.items[] | "\(.name)"')
 
     _sce_list_queues
     local _queues=$(echo $curl_STDOUT | jq -r '.items[] | "\(.name)"')
-    echo -e "\nQueues:\n$_queues"
+    echo -e "Queues:"
+    for q in $_queues; do
+        # We have to do this side quest to get the container group list for each queue
+        # because list_queues doesn't populate the container_groups array
+        local _cgs=$(echo $_cgroups_raw | jq -rj '[ .items[] ] | map({id: .id, name: .name, queue: .queue_connection.queue_name, status: .current_state.status}) | map(select(.queue == "'$q'")) | .[] | "\(.name) "')
+        echo "  $q:"
+        [[ -n $_cgs ]] && echo "    CG: $_cgs"
+    done
+
+    echo -e "\nContainer Groups:"
+    for cg in $_cgroups; do
+        _sce_list_servers $cg
+        local _servers=$(echo $curl_STDOUT | jq -r '.instances[] | "\(.machine_id) (\(.state))"')
+        echo -e "  $cg:\n    $_servers"
+    done
 }
 
 # Execution starts here
@@ -366,7 +381,7 @@ case $COMMAND in
             json_fmt='.instances[] | "\(.machine_id) \(.state) \(.update_time)"'
         fi
         # <cg-name>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances"
+        _sce_list_servers $1
         if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
             echo $curl_STDOUT | jq -r "$json_fmt"
         else
