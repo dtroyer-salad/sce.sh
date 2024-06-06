@@ -182,6 +182,18 @@ function GET {
     $_dry_run $_a_curl -X GET $_url $@ >/dev/null
 }
 
+# PATCH <url> [...]
+function PATCH {
+    local _dry_run
+    local _url=${1}
+    shift
+
+    [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X PATCH $_url $@" >&2
+
+    $_dry_run $_a_curl -X PATCH $_url $@
+}
+
 # POST <url> [...]
 function POST {
     local _dry_run
