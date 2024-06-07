@@ -1,0 +1,40 @@
+{
+    "name": "mandel",
+    "display_name": "Mandelbrot Group",
+    "container": {
+        "image": "xr7org/mandelbrotw:v9",
+        "resources": {
+            "cpu": 1,
+            "memory": 1024,
+            "gpu_classes": [],
+            "storage_amount": null
+        },
+        "environment_variables": {
+            "SALAD_QUEUE_WORKER_LOG_LEVEL": "debug"
+        }
+    },
+    "autostart_policy": true,
+    "restart_policy": "always",
+    "replicas": 1,
+    "country_codes": [
+        "us"
+    ],
+    "readiness_probe": {
+        "http": {
+            "path": "/health",
+            "port": "80",
+            "scheme": "http",
+            "headers": []
+        },
+        "initial_delay_seconds": 0,
+        "period_seconds": 5,
+        "timeout_seconds": 5,
+        "success_threshold": 1,
+        "failure_threshold": 2
+    },
+    "queue_connection": {
+        "path": "generate",
+        "port": 80,
+        "queue_name": "blueque"
+    }
+}
