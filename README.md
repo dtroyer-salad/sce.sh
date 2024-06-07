@@ -101,6 +101,14 @@ currently configured project without asking.  Here be dragons!
 * `-x`  
     Turn on shell tracing (aka bash -x)
 
+## Environment
+
+* `SCE_ORGANIZATION_NAME`  
+    Set the organization name, allows skipping the `-o` option
+
+* `SCE_PROJECT_NAME`  
+    Set the project name, allows skipping the `-p` option
+
 # Installation
 
 `sce` is written in Shell script, specifically `bash` 3.x+.  It also requires a

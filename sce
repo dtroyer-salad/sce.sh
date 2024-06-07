@@ -18,100 +18,105 @@ Usage:
   $script_name <command> [options] [args]
 
 Commands:
-apikey-show
-  Show the logged-in user's apikey
+    apikey-show
+        Show the logged-in user's apikey
 
-cg-create <data-filename>
-  Create a new container group
+    cg-create <data-filename>
+        Create a new container group
 
-cg-delete <cg-name>
-  Delete a container group
+    cg-delete <cg-name>
+        Delete a container group
 
-cg-error-list <cg-name>
-  List container group errors
+    cg-error-list <cg-name>
+        List container group errors
 
-cg-list
-  List container groups for an org/project
+    cg-list
+        List container groups for an org/project
 
-cg-log-list
-  List last 24 hours of logs for the container group
+    cg-log-list
+        List last 24 hours of logs for the container group
 
-cg-show <cg-name>
-  Show specific container group details
+    cg-show <cg-name>
+        Show specific container group details
 
-cg-start <cg-name>
-  Starts a container group and allocates new server nodes
+    cg-start <cg-name>
+        Starts a container group and allocates new server nodes
 
-cg-stop <cg-name>
-  Stops a container group and destroys server nodes
+    cg-stop <cg-name>
+        Stops a container group and destroys server nodes
 
-gpu-class-list
-  List GPU classes
+    gpu-class-list
+        List GPU classes
 
-job-create <queue-name> <data-filename>
-  Create a new job in a queue
+    job-create <queue-name> <data-filename>
+        Create a new job in a queue
 
-job-delete <queue-name> <job-id>
-  Delete a job from a queue
+    job-delete <queue-name> <job-id>
+        Delete a job from a queue
 
-login <email>
-  Log in to the SCE Portal
+    login <email>
+        Log in to the SCE Portal
 
-logout
-  Log out of the SCE Portal
+    logout
+        Log out of the SCE Portal
 
-project-clean
-  Clean up all resources under a project: container groups, queues
+    project-clean
+        Clean up all resources under a project: container groups, queues
 
-project-status
-  Show summary of project
+    project-status
+        Show summary of project
 
-queue-create <data-filename>
-  Create a new job queue
+    queue-create <data-filename>
+        Create a new job queue
 
-queue-delete <queue-name>
-  Delete a job queue
+    queue-delete <queue-name>
+        Delete a job queue
 
-queue-list
-  List queues for an org/project
+    queue-list
+        List queues for an org/project
 
-queue-show <queue-name>
-  Show specific queue details
+    queue-show <queue-name>
+        Show specific queue details
 
-server-list <cg-name>
-  List servers for an org/project
+    server-list <cg-name>
+        List servers for an org/project
 
-server-reallocate <cg-name> <server-id>
-  Removes a server node from a container group and allocates a new one
+    server-reallocate <cg-name> <server-id>
+        Removes a server node from a container group and allocates a new one
 
-server-recreate <cg-name> <server-id>
-  Removes and recreates a container on a server node using the same image
+    server-recreate <cg-name> <server-id>
+        Removes and recreates a container on a server node using the same image
 
-server-restart <cg-name> <server-id>
-  Restarts a container on a server node using the same image
+    server-restart <cg-name> <server-id>
+        Restarts a container on a server node using the same image
 
-server-show <cg-name> <server-id>
-  Show specific server details
+    server-show <cg-name> <server-id>
+        Show specific server details
 
-token-create <cg-name> <server-id>
-  Generate a log auth token for a specific server
+    token-create <cg-name> <server-id>
+        Generate a log auth token for a specific server
 
 Options:
--j
-    Display raw JSON output
+    -j
+        Display raw JSON output
 
--o <organization-name>
-    Specify an organization name (env: SCE_ORGANIZATION_NAME)
+    -o <organization-name>
+        Specify an organization name (env: SCE_ORGANIZATION_NAME)
 
--p <project-name>
-    Specify a project name (env: SCE_PROJECT_NAME)
+    -p <project-name>
+        Specify a project name (env: SCE_PROJECT_NAME)
 
--v
-    Display verbose information, such as the raw curl commands (note, this WILL include the API key!)
+    -v
+        Display verbose information, such as the raw curl commands (note, this WILL include the API key!)
 
--x
-    Turn on shell tracing (aka bash -x)
+    -x
+        Turn on shell tracing (aka bash -x)
 END_HELP
+
+function show_help {
+    echo "$HELP"
+    exit 1
+}
 
 # Source our support functions
 INC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
@@ -172,8 +177,11 @@ shift
 SCE_ORG=${SCE_ORG:-$SCE_ORGANIZATION_NAME}
 SCE_PROJ=${SCE_PROJ:-$SCE_PROJECT_NAME}
 
-while getopts jo:p:vx c; do
+while getopts hjo:p:vx c; do
     case $c in
+        h)
+            show_help
+            ;;
         j)
             JSON=1
             ;;
@@ -372,9 +380,9 @@ case $COMMAND in
 esac
 if [[ -n $DO_HELP ]]; then
     echo "Unknown command: $COMMAND"
-    echo "$HELP"
-    exit 1
+    show_help
 fi
+
 if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
     [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq -r "$json_fmt"
 else
