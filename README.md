@@ -18,6 +18,9 @@ currently configured project without asking.  Here be dragons!
 * `cg-delete <cg-name>`  
   Delete a container group
 
+* `cg-error-list <cg-name>`  
+  List container group errors
+
 * `cg-list`  
   List container groups for an org/project
 
@@ -27,6 +30,15 @@ currently configured project without asking.  Here be dragons!
 * `cg-show <cg-name>`  
   Show specific container group details
 
+* `cg-start <cg-name>`  
+  Starts a container group and allocates new server nodes
+
+* `cg-stop <cg-name>`  
+  Stops a container group and destroys server nodes
+
+* `gpu-class-list`  
+  List GPU classes
+
 * `job-create <queue-name> <data-filename>`  
   Create a new job in a queue
 
@@ -35,6 +47,9 @@ currently configured project without asking.  Here be dragons!
 
 * `login <email>`  
   Log in to the SCE Portal
+
+* `logout`  
+  Log out of the SCE Portal
 
 * `project-clean`  
   Clean up all resources under a project: container groups, queues
@@ -56,6 +71,12 @@ currently configured project without asking.  Here be dragons!
 
 * `server-list <cg-name>`  
   List servers for an org/project
+
+* `server-reallocate <cg-name> <server-id>`  
+  Removes a server node from a container group and allocates a new one
+
+* `server-recreate <cg-name> <server-id>`  
+  Removes and recreates a container on a server node using the same image
 
 * `server-show <cg-name> <server-id>`  
   Show specific server details

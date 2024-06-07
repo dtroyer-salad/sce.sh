@@ -27,6 +27,9 @@ cg-create <data-filename>
 cg-delete <cg-name>
   Delete a container group
 
+cg-error-list <cg-name>
+  List container group errors
+
 cg-list
   List container groups for an org/project
 
@@ -36,6 +39,15 @@ cg-log-list
 cg-show <cg-name>
   Show specific container group details
 
+cg-start <cg-name>
+  Starts a container group and allocates new server nodes
+
+cg-stop <cg-name>
+  Stops a container group and destroys server nodes
+
+gpu-class-list
+  List GPU classes
+
 job-create <queue-name> <data-filename>
   Create a new job in a queue
 
@@ -44,6 +56,9 @@ job-delete <queue-name> <job-id>
 
 login <email>
   Log in to the SCE Portal
+
+logout
+  Log out of the SCE Portal
 
 project-clean
   Clean up all resources under a project: container groups, queues
@@ -65,6 +80,15 @@ queue-show <queue-name>
 
 server-list <cg-name>
   List servers for an org/project
+
+server-reallocate <cg-name> <server-id>
+  Removes a server node from a container group and allocates a new one
+
+server-recreate <cg-name> <server-id>
+  Removes and recreates a container on a server node using the same image
+
+server-restart <cg-name> <server-id>
+  Restarts a container on a server node using the same image
 
 server-show <cg-name> <server-id>
   Show specific server details
@@ -186,6 +210,15 @@ case $COMMAND in
         # <cg-name>
         _sce_delete_container_group $1
         ;;
+    cg-error-list)
+        if [[ -n $JSON ]]; then
+            json_fmt='.items[]'
+        else
+            json_fmt='.items[] | "\(.failed_at) \(.machine_id) \(.details) \(.version)"'
+        fi
+        # <cg-name>
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/errors"
+        ;;
     cg-list)
         if [[ -n $JSON ]]; then
             json_fmt='.items[]'
@@ -216,6 +249,25 @@ case $COMMAND in
         # <cg-name>
         GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
         ;;
+    cg-start)
+        [[ -z $JSON ]] && json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
+        # start_container_group: <cg-name>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/start"
+        ;;
+    cg-stop)
+        [[ -z $JSON ]] && json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
+        # stop_container_group: <cg-name>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/stop"
+        ;;
+    gpu-class-list|gpu-list)
+        if [[ -n $JSON ]]; then
+            json_fmt='.items[]'
+        else
+            json_fmt='.items[] | "\(.id) \(.name) \(.is_high_demand)"'
+        fi
+        # list_gpu_classes: (no args)
+        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/gpu-classes"
+        ;;
     job-create|j-create)
         [[ -r "$2" ]] || die "Data file '$2' not found"
         [[ -z $JSON ]] && json_fmt='"\(.id) \(.metadata.id) \(.status)"'
@@ -241,11 +293,15 @@ case $COMMAND in
         GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues/${1}/jobs/${2}"
         ;;
     login)
-        # <email>
+        # login: <email>
         [[ -z $1 ]] && die "email address required"
         read_password _sce_password "Enter Portal login password"
-        echo $(_sce_login $1 $_sce_password)
-        unset _sce_password
+        _sce_login $1 $_sce_password
+        unset _sce_password curl_STDOUT
+        ;;
+    logout)
+        # logout: (no args)
+        POST "$SCE_PORTAL_URL/users/logout" --cookie-jar $SCE_COOKIE_JAR
         ;;
     project-clean)
         do_project_clean
@@ -287,6 +343,18 @@ case $COMMAND in
         fi
         # <cg-name>
         _sce_list_servers $1
+        ;;
+    server-reallocate|s-reallocate)
+        # container_group_instance_reallocate: <cg-name> <server-id>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/reallocate"
+        ;;
+    server-rerecreate|s-recreate)
+        # container_group_instance_recreate: <cg-name> <server-id>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/recreate"
+        ;;
+    server-restart|s-restart)
+        # container_group_instance_restart: <cg-name> <server-id>
+        POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/instances/${2}/restart"
         ;;
     server-show|s-show)
         [[ -z $JSON ]] && json_fmt='"\(.instance_id) \(.state) \(.started) \(.ready)"'
