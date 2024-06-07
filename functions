@@ -19,12 +19,15 @@ FUNC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 SCE_PORTAL_URL=${SCE_PORTAL_URL:-https://portal-api.salad.com/api/portal}
 SCE_PUBLIC_URL=${SCE_PUBLIC_URL:-https://api.salad.com/api/public}
 
-# Set the API token if it is readable and is not already set
-[[ -r $HOME/.sce-apikey ]] && SCE_APIKEY=${SCE_APIKEY:-$(head -1 $HOME/.sce-apikey)}
+# Set the config directory
+SCE_CONFIG_DIR=${SCE_CONFIG_DIR:-$HOME/.config/sce}
+[[ -d $SCE_CONFIG_DIR ]] || mkdir -p $SCE_CONFIG_DIR
 
 # Set the cookie jar location if it is not already set
-[[ -d $HOME/.config/sce ]] || mkdir -p $HOME/.config/sce
-SCE_COOKIE_JAR=${SCE_COOKIE_JAR:-$HOME/.config/sce/cookie-jar}
+SCE_COOKIE_JAR=${SCE_COOKIE_JAR:-$SCE_CONFIG_DIR/cookie-jar}
+
+# Set the API token if it is readable and is not already set
+[[ -r $SCE_CONFIG_DIR/apikey ]] && SCE_APIKEY=${SCE_APIKEY:-$(head -1 $SCE_CONFIG_DIR/apikey)}
 
 # Initialize the global cURL return variables
 curl_STATUS=""

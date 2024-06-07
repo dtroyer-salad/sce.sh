@@ -103,11 +103,32 @@ currently configured project without asking.  Here be dragons!
 
 ## Environment
 
+* `SCE_APIKEY`  
+    The API key to use for the SCE Public API (default: read from $SCE_CONFIG_DIR/apikey)
+
+* `SCE_CONFIG_DIR`  
+    Full path to the directory for `sce` configuration files (default: $HOME/.config/sce)
+
+* `SCE_COOKIE_JAR`  
+    Full path to the cookie jar file (mananged by cURL) (default: $SCE_CONFIG_DIR/cookie-jar)
+
+* `SCE_LOG_FILE`  
+    Full path to the log file (default: unset)
+
 * `SCE_ORGANIZATION_NAME`  
     Set the organization name, allows skipping the `-o` option
 
+* `SCE_PORTAL_URL`  
+    The URL for the SCE Portal API (default: https://portal-api.salad.com/api/portal)
+
 * `SCE_PROJECT_NAME`  
     Set the project name, allows skipping the `-p` option
+
+* `SCE_PUBLIC_URL`  
+    The URL for the SCE Public API (default: https://api.salad.com/api/public)
+
+* `SCE_VERBOSE`  
+    Additional logging is emitted if this is set (default: unset)
 
 # Installation
 
