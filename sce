@@ -293,6 +293,7 @@ case $COMMAND in
             json_fmt='.items[] | "\(.id) \(.name) \(.description) \(.container_groups)"'
         fi
         # <queue-name>
+        [[ -z $1 ]] && die "queue-name required"
         _sce_list_queue_jobs $1
         ;;
     job-show|j-show)
