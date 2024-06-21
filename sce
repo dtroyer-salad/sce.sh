@@ -124,6 +124,18 @@ source $INC_DIR/functions
 
 # Subcommand Functions
 
+function do_log_list {
+    if [[ -n $JSON ]]; then
+        json_fmt='.items[]'
+    else
+        json_fmt='.items[] | | =sort_by(.create_time) | "\(.create_time) \(.machine_id) \(.message)"'
+    fi
+    # <cg-name>
+    _start_time=$(date -u -v-1d "+%Y-%m-%dT%H:%M:%SZ")
+    _data="{\"start_time\":\"$_start_time\"}"
+    POST "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/logs" --data "$_data"  --cookie $SCE_COOKIE_JAR
+}
+
 # do_project_clean
 # Clean all container groups and queues from a project
 function do_project_clean {
@@ -202,6 +214,7 @@ done
 shift $((OPTIND-1))
 
 json_fmt='.'
+exitcode=0
 case $COMMAND in
     apikey-show)
         [[ -z $JSON ]] && json_fmt='"\(.key)"'
@@ -240,7 +253,7 @@ case $COMMAND in
         if [[ -n $JSON ]]; then
             json_fmt='.items[]'
         else
-            json_fmt='.items[] | "\(.create_time) \(.machine_id) \(.message)"'
+            json_fmt='[.items[] | {create_time: .create_time, machine_id: .machine_id, message: .message}] | sort_by(.create_time) | .[] | "\(.create_time) \(.machine_id) \(.message)"'
         fi
         # <cg-name>
         _start_time=$(date -u -v-1d "+%Y-%m-%dT%H:%M:%SZ")
@@ -388,5 +401,7 @@ if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
     [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq -r "$json_fmt"
 else
     [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq '.'
-    die "Return Status: $curl_STATUS"
+    die $LINENO "Return Status: $curl_STATUS"
 fi
+
+exit $exitcode
