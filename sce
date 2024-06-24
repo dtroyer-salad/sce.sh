@@ -27,6 +27,9 @@ Commands:
     cg-delete <cg-name>
         Delete a container group
 
+    cg-dns-show <cg-name>
+        Return the DNS name of a container group if networking is enabled
+
     cg-error-list <cg-name>
         List container group errors
 
@@ -44,6 +47,12 @@ Commands:
 
     cg-stop <cg-name>
         Stops a container group and destroys server nodes
+
+    curl <method-in-caps> <url-path-suffix> [<curl-args> ...]
+        Calls curl using the specified method (must be in capital letters)
+        and the URL path that follows '/public/organizations/<org>/projects/<proj>'
+        for the SCE Public API.  This adds the options for JSON output,
+        the SCE API key and the root of the SCE API URL automatically.
 
     gpu-class-list
         List GPU classes
@@ -231,6 +240,15 @@ case $COMMAND in
         # <cg-name>
         _sce_delete_container_group $1
         ;;
+    cg-dns-show)
+        # <cg-name>
+        _sce_get_container_group $1
+        if [[ -z $JSON ]]; then
+            json_fmt=".networking.dns"
+        else
+            json_fmt='{networking: {dns: .networking.dns}}'
+        fi
+        ;;
     cg-error-list)
         if [[ -n $JSON ]]; then
             json_fmt='.items[]'
@@ -268,7 +286,7 @@ case $COMMAND in
     cg-show)
         [[ -z $JSON ]] && json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         # <cg-name>
-        GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+        _sce_get_container_group $1
         ;;
     cg-start)
         [[ -z $JSON ]] && json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
@@ -279,6 +297,25 @@ case $COMMAND in
         [[ -z $JSON ]] && json_fmt='"\(.id) \(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         # stop_container_group: <cg-name>
         POST "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}/stop"
+        ;;
+    curl)
+        method=$1; shift
+        url_path=$1; shift
+
+        if [[ ! "DELETE,GET,HEAD,OPTIONS,POST,PUT,TRACE," =~ ",$method," ]]; then
+            echo "Invalid HTTP method: $method"
+            exit 10
+        fi
+
+        $_a_curl -X $method "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}${url_path}" "$@"
+        exitcode=$?
+        if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
+            [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq -r "."
+        else
+            [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq -r "."
+            err $LINENO "Return Status: $curl_STATUS"
+        fi
+        exit $exitcode
         ;;
     gpu-class-list|gpu-list)
         if [[ -n $JSON ]]; then

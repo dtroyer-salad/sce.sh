@@ -260,6 +260,13 @@ function _sce_delete_container_group {
     DELETE "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
 }
 
+
+# _sce_get_container_group <cg-name>
+function _sce_get_container_group {
+    # <cg-name>
+    GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
+}
+
 # _sce_list_container_groups
 function _sce_list_container_groups {
     # (no args)

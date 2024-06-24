@@ -18,6 +18,9 @@ currently configured project without asking.  Here be dragons!
 * `cg-delete <cg-name>`  
   Delete a container group
 
+* `cg-dns-show <cg-name>`  
+  Return the DNS name of a container group if networking is enabled
+
 * `cg-error-list <cg-name>`  
   List container group errors
 
@@ -35,6 +38,12 @@ currently configured project without asking.  Here be dragons!
 
 * `cg-stop <cg-name>`  
   Stops a container group and destroys server nodes
+
+* `curl <method-in-caps> <url-path-suffix> [<curl-args> ...]`  
+  Calls curl using the specified method (must be in capital letters)
+  and the URL path that follows '/public/organizations/<org>/projects/<proj>'
+  for the SCE Public API.  This adds the options for JSON output,
+  the SCE API key and the root of the SCE API URL automatically.
 
 * `gpu-class-list`  
   List GPU classes
