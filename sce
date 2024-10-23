@@ -369,14 +369,14 @@ case $COMMAND in
         # logout: (no args)
         POST "$SCE_PORTAL_URL/users/logout" --cookie-jar $SCE_COOKIE_JAR
         ;;
+    node-set-workload)
+        # <node-id> <workload-id>
+        _sce_node_set_workload $1 $2
+        ;;
     node-show)
         # <node-id>
         _sce_node_show $1
         ;;
-    # node-set-workload)
-    #     # <node-id> <workload-id>
-    #     _node_set_workload $1 $2
-    #     ;;
     project-clean)
         do_project_clean
         curl_STDOUT=""

@@ -316,6 +316,17 @@ function _sce_list_queues {
 
 # Nodes
 
+# _sce_node_set_workload <node-ip> <workload-ip>
+function _sce_node_set_workload {
+    if [[ -z ${SCE_SUPPORT_TOKEN} ]]; then
+        die $LINENO "Please set SCE_SUPPORT_TOKEN to continnue"
+    fi
+    token_header='Authorization:Bearer '$SCE_SUPPORT_TOKEN
+    [[ -z $SCE_DRY_RUN ]] && _auth_header=(--header "$token_header")
+    # POST {{matrix_rest_api_base_url}}/api/v2/matrix/nodes/:nodeId/set-workload/:workloadId
+    POST "$SCE_MATRIX_URL/matrix/nodes/${1}/set-workload/${2}"
+}
+
 # _sce_node_show <node-id>
 function _sce_node_show {
     if [[ -z ${SCE_SUPPORT_TOKEN} ]]; then
@@ -323,7 +334,6 @@ function _sce_node_show {
     fi
     token_header='Authorization:Bearer '$SCE_SUPPORT_TOKEN
     [[ -z $SCE_DRY_RUN ]] && _auth_header=(--header "$token_header")
-    echo "_C_H 2: " "${_auth_header[@]}"
     GET "$SCE_MATRIX_URL/matrix/nodes/${1}"
 }
 
