@@ -129,10 +129,6 @@ function log {
 # REST Functions
 # ==============
 
-# JSON output
-_j_curl="_curl "
-_a_curl=$_j_curl
-
 # Authenticated cURL: Include API token header only if it is set
 _auth_header=()
 [[ -n $SCE_APIKEY ]] && _auth_header=(--header Salad-Api-Key:$SCE_APIKEY)
@@ -178,7 +174,7 @@ function DELETE {
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
     [[ -n $SCE_VERBOSE ]] && echo "_curl -X DELETE $_url $@" >&2
 
-    $_dry_run $_a_curl -X DELETE $_url $@
+    $_dry_run _curl -X DELETE $_url $@
 }
 
 # GET <url>
@@ -190,7 +186,7 @@ function GET {
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
     [[ -n $SCE_VERBOSE ]] && echo "_curl -X GET $_url $@" >&2
 
-    $_dry_run $_a_curl -X GET $_url $@ >/dev/null
+    $_dry_run _curl -X GET $_url $@ >/dev/null
 }
 
 # PATCH <url> [...]
@@ -202,7 +198,7 @@ function PATCH {
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
     [[ -n $SCE_VERBOSE ]] && echo "_curl -X PATCH $_url $@" >&2
 
-    $_dry_run $_a_curl -X PATCH $_url $@
+    $_dry_run _curl -X PATCH $_url $@
 }
 
 # POST <url> [...]
@@ -214,7 +210,7 @@ function POST {
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
     [[ -n $SCE_VERBOSE ]] && echo "_curl -X POST $_url $@" >&2
 
-    $_dry_run $_a_curl -X POST $_url $@
+    $_dry_run _curl -X POST $_url $@
 }
 
 # PUT <url>
@@ -226,7 +222,7 @@ function PUT {
     [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
     [[ -n $SCE_VERBOSE ]] && echo "_curl -X PUT $_url $@" >&2
 
-    $_dry_run $_a_curl -X PUT $_url $@
+    $_dry_run _curl -X PUT $_url $@
 }
 
 

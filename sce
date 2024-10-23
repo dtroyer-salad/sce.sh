@@ -314,7 +314,7 @@ case $COMMAND in
             exit 10
         fi
 
-        $_a_curl -X $method "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}${url_path}" "$@"
+        _curl -X $method "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}${url_path}" "${_curl_headers[@]}" "${_auth_header[@]}" "$@"
         exitcode=$?
         if [[ ",200,201,202,204," =~ "$curl_STATUS" ]]; then
             [[ -n $curl_STDOUT ]] && echo $curl_STDOUT | jq -r "."
