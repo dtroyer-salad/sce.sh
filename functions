@@ -316,6 +316,16 @@ function _sce_list_queues {
 
 # Nodes
 
+# _sce_node_list <user-id>
+function _sce_node_list {
+    if [[ -z ${SCE_SUPPORT_TOKEN} ]]; then
+        die $LINENO "Please set SCE_SUPPORT_TOKEN to continnue"
+    fi
+    token_header='Authorization:Bearer '$SCE_SUPPORT_TOKEN
+    [[ -z $SCE_DRY_RUN ]] && _auth_header=(--header "$token_header")
+    GET "$SCE_MATRIX_URL/matrix/nodes/?userId=${1}"
+}
+
 # _sce_node_set_workload <node-ip> <workload-ip>
 function _sce_node_set_workload {
     if [[ -z ${SCE_SUPPORT_TOKEN} ]]; then

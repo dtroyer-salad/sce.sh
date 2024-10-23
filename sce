@@ -69,6 +69,9 @@ Commands:
     logout
         Log out of the SCE Portal
 
+    node-list <user-id>
+        List known nodes for the specified user
+
     node-set-workload <node-id> <workload-id>
         Assigns a workload to a specific node
 
@@ -368,6 +371,10 @@ case $COMMAND in
     logout)
         # logout: (no args)
         POST "$SCE_PORTAL_URL/users/logout" --cookie-jar $SCE_COOKIE_JAR
+        ;;
+    node-list)
+        # <user-id>
+        _sce_node_list $1
         ;;
     node-set-workload)
         # <node-id> <workload-id>
