@@ -69,6 +69,12 @@ Commands:
     logout
         Log out of the SCE Portal
 
+    node-set-workload <node-id> <workload-id>
+        Assigns a workload to a specific node
+
+    node-show <node-id>
+        Show specific node information
+
     project-clean
         Clean up all resources under a project: container groups, queues
 
@@ -363,6 +369,14 @@ case $COMMAND in
         # logout: (no args)
         POST "$SCE_PORTAL_URL/users/logout" --cookie-jar $SCE_COOKIE_JAR
         ;;
+    node-show)
+        # <node-id>
+        _sce_node_show $1
+        ;;
+    # node-set-workload)
+    #     # <node-id> <workload-id>
+    #     _node_set_workload $1 $2
+    #     ;;
     project-clean)
         do_project_clean
         curl_STDOUT=""

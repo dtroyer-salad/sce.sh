@@ -18,6 +18,7 @@ FUNC_DIR=$(cd $(dirname "${BASH_SOURCE:-$0}") && pwd)
 # SCE_VERBOSE - emit RT API commands
 
 # Set the SCE Portal and Public API endpoints if it not already set
+SCE_MATRIX_URL=${SCE_MATRIX_URL:-https://matrix-rest-api.salad.com/api/v2}
 SCE_PORTAL_URL=${SCE_PORTAL_URL:-https://portal-api.salad.com/api/portal}
 SCE_PUBLIC_URL=${SCE_PUBLIC_URL:-https://api.salad.com/api/public}
 
@@ -129,11 +130,15 @@ function log {
 # ==============
 
 # JSON output
-_j_curl="_curl --header accept:application/json --header content-type:application/json "
-
-# Authenticated cURL: Include API token header only if it is set and not --dry-run
+_j_curl="_curl "
 _a_curl=$_j_curl
-[[ -z $SCE_DRY_RUN ]] && _a_curl="$_j_curl ${SCE_APIKEY:+-H Salad-Api-Key:$SCE_APIKEY} "
+
+# Authenticated cURL: Include API token header only if it is set
+_auth_header=()
+[[ -n $SCE_APIKEY ]] && _auth_header=(--header Salad-Api-Key:$SCE_APIKEY)
+
+# JSON and other default headers
+_curl_headers=(--header accept:application/json --header content-type:application/json)
 
 # _curl <args>
 # Runs cURL and sets the stdout, stderr and exit codes in global variables so the caller
@@ -155,9 +160,10 @@ function _curl {
         IFS=$'\n' read -r -d '' curl_STATUS;
         IFS=$'\n' read -r -d '' curl_STDOUT;
         IFS=$'\n' read -r -d '' curl_STDEXIT;
-    } < <((printf '\0%s\0%d\0;' "$($_curl_cmd -w "%{stderr}%{response_code}" "$@")" "${?}" 1>&2) 2>&1)
+    } < <((printf '\0%s\0%d\0;' "$($_curl_cmd -w "%{stderr}%{response_code}" "${_curl_headers[@]}" "${_auth_header[@]}" "$@")" "${?}" 1>&2) 2>&1)
+    # The above is a quoting nightmare, but the subshell MUST have no unquoted spaces in it!
     curl_STDEXIT=${curl_STDEXIT:-0};
-    [[ -n $SCE_VERBOSE ]] && echo "$_curl_cmd $@" >&2
+    [[ -n $SCE_VERBOSE ]] && echo "$_curl_cmd ${_curl_headers[@]} $@" >&2
     [[ $curl_STDEXIT == 0 ]] || die $LINENO "cURL exit $curl_STDEXIT"
 
     $xtrace
@@ -310,6 +316,19 @@ function _sce_list_queues {
     # (no args)
     GET "$SCE_PORTAL_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues" --cookie $SCE_COOKIE_JAR
     # GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/queues"
+}
+
+# Nodes
+
+# _sce_node_show <node-id>
+function _sce_node_show {
+    if [[ -z ${SCE_SUPPORT_TOKEN} ]]; then
+        die $LINENO "Please set SCE_SUPPORT_TOKEN to continnue"
+    fi
+    token_header='Authorization:Bearer '$SCE_SUPPORT_TOKEN
+    [[ -z $SCE_DRY_RUN ]] && _auth_header=(--header "$token_header")
+    echo "_C_H 2: " "${_auth_header[@]}"
+    GET "$SCE_MATRIX_URL/matrix/nodes/${1}"
 }
 
 # Servers
