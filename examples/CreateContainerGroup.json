@@ -11,6 +11,14 @@
         },
         "environment_variables": {
             "SALAD_QUEUE_WORKER_LOG_LEVEL": "debug"
+        },
+        "logging": {
+            "http": {
+                "host": "rowlf.xr7.org",
+                "port": 18000,
+                "format": "json",
+                "compression": "none"
+            }
         }
     },
     "autostart_policy": true,

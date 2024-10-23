@@ -281,7 +281,8 @@ case $COMMAND in
     cg-set)
         [[ -z $JSON ]] && json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'
         # <cg-name> <data-filename>
-        PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}
+        _sce_set_container_group $1 $2
+        # PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}
         ;;
     cg-show)
         [[ -z $JSON ]] && json_fmt='"\(.name) \(.current_state.status) \(.current_state.description) \(.container.image) \(.queue_connection.queue_name)"'

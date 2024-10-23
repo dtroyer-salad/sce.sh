@@ -10,6 +10,14 @@
         },
         "environment_variables": {
             "SALAD_QUEUE_WORKER_LOG_LEVEL": "info"
+        },
+        "logging": {
+            "http": {
+                "host": "rowlf.xr7.org",
+                "port": 18000,
+                "format": "json",
+                "compression": "none"
+            }
         }
     },
     "replicas": 2,

@@ -267,10 +267,26 @@ function _sce_get_container_group {
     GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}"
 }
 
+# _sce_get_dns <cg-name>
+function _sce_get_dns {
+    :
+}
+
 # _sce_list_container_groups
 function _sce_list_container_groups {
     # (no args)
     GET "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers"
+}
+
+# _sce_set_container_group
+function _sce_set_container_group {
+    local _x_curl="_curl --header accept:application/json --header content-type:application/merge-patch+json ${SCE_APIKEY:+-H Salad-Api-Key:$SCE_APIKEY} "
+    # <cg-name> <data-filename>
+    # PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}
+
+    [[ -n $SCE_DRY_RUN ]] && _dry_run=echo
+    [[ -n $SCE_VERBOSE ]] && echo "_curl -X PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}" >&2
+    $_dry_run $_x_curl -X PATCH "$SCE_PUBLIC_URL/organizations/${SCE_ORG}/projects/${SCE_PROJ}/containers/${1}" --data @${2}
 }
 
 # Jobs
