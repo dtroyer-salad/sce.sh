@@ -72,7 +72,7 @@ Commands:
     node-list <user-id>
         List known nodes for the specified user
 
-    node-set-workload <node-id> <workload-id>
+    node-set-workload <node-id> <workload-id|workload-name>
         Assigns a workload to a specific node
 
     node-show <node-id>
@@ -377,8 +377,14 @@ case $COMMAND in
         _sce_node_list $1
         ;;
     node-set-workload)
-        # <node-id> <workload-id>
-        _sce_node_set_workload $1 $2
+        # <node-id> <workload-id|workload-name>
+        _sce_lookup_container_group $2
+        workload=$curl_STDOUT
+        if [[ -z $workload ]]; then
+            # maybe it wasn't a CG name?
+            workload=$2
+        fi
+        _sce_node_set_workload $1 $workload
         ;;
     node-show)
         # <node-id>
